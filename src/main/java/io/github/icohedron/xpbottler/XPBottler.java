@@ -12,6 +12,7 @@ import org.spongepowered.api.command.args.GenericArguments;
 import org.spongepowered.api.command.spec.CommandSpec;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.data.key.Keys;
+import org.spongepowered.api.data.manipulator.mutable.entity.ExperienceHolderData;
 import org.spongepowered.api.entity.Entity;
 import org.spongepowered.api.entity.EntityTypes;
 import org.spongepowered.api.entity.living.player.Player;
@@ -33,8 +34,9 @@ import org.spongepowered.api.world.Location;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
-@Plugin(id = "xpbottler", name = "XPBottler", version = "1.0.0-S5.1-SNAPSHOT-1",
+@Plugin(id = "xpbottler", name = "XPBottler", version = "1.0.0-S5.1-SNAPSHOT-2",
         description = "Store your experience in bottles!")
 public class XPBottler {
 
@@ -94,7 +96,16 @@ public class XPBottler {
                     }
 
                     Player player = (Player) src;
-                    int experience = player.get(Keys.TOTAL_EXPERIENCE).get();
+
+                    ExperienceHolderData experienceHolderData;
+                    Optional<ExperienceHolderData> optExperience = player.get(ExperienceHolderData.class);
+                    if (optExperience.isPresent()) {
+                        experienceHolderData = optExperience.get();
+                    } else {
+                        src.sendMessage(Text.of(prefix, TextColors.RED, "Internal error: Failed to get player experience data"));
+                        return CommandResult.empty();
+                    }
+                    int experience = experienceHolderData.totalExperience().get();
 
                     String arg = (String) args.getOne("amount").get();
                     if (arg.equalsIgnoreCase("max")) {
@@ -102,14 +113,16 @@ public class XPBottler {
 
                         if (consumeBottles) {
                             int glassBottles = countGlassBottles(player);
-                            maxBottles = glassBottles > maxBottles ? maxBottles : glassBottles;
+                            if (glassBottles < maxBottles) {
+                                maxBottles = glassBottles;
+                            }
                         }
 
                         if (maxBottles > maxLimit) {
                             maxBottles = maxLimit;
                         }
 
-                        return bottleXP(player, experience, maxBottles);
+                        return bottleXP(player, experienceHolderData, maxBottles);
                     } else {
                         try {
                             int bottles = Integer.parseInt(arg);
@@ -122,7 +135,7 @@ public class XPBottler {
                                 return CommandResult.empty();
                             }
 
-                            return bottleXP(player, experience, bottles);
+                            return bottleXP(player, experienceHolderData, bottles);
                         } catch (NumberFormatException e) {
                             src.sendMessage(Text.of(prefix, TextColors.RED, "'", arg, "' is not a valid amount!"));
                             return CommandResult.empty();
@@ -134,7 +147,9 @@ public class XPBottler {
         Sponge.getCommandManager().register(this, bottle, "bottle");
     }
 
-    private CommandResult bottleXP(Player player, int experience, int bottles) {
+    private CommandResult bottleXP(Player player, ExperienceHolderData experienceHolderData, int bottles) {
+        int experience = experienceHolderData.totalExperience().get();
+
         String noun = "experience bottles";
         if (bottles == 1) {
             noun = "experience bottle";
@@ -166,7 +181,8 @@ public class XPBottler {
             }
         }
 
-        player.offer(Keys.TOTAL_EXPERIENCE, experience - deductedXP);
+        experienceHolderData.set(experienceHolderData.totalExperience().set(experience - deductedXP));
+        player.offer(experienceHolderData);
 
         player.sendMessage(Text.of(prefix, TextColors.YELLOW, "Successfully created " + bottles + " " + noun + "!"));
         return CommandResult.success();
