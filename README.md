@@ -1,6 +1,9 @@
 # XPBottler
 Store your experience in bottles!
 
+# WARNING: avoid using this plugin (for now)
+There is [a bug](https://github.com/SpongePowered/SpongeVanilla/issues/340) in the way Sponge handles player experience data which may cause experience to be completely inacurrate or change unpredictably
+
 ## Features
 - Create experience bottles (Bottle o' Enchanting) to store player experience in
 - Configurable amount of experience required to create an experience bottle (Bottle o' Enchanting)
