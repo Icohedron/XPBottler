@@ -1,5 +1,6 @@
 # XPBottler
 Store your experience in bottles!
+*Still in development/testing*
 
 # WARNING: avoid using this plugin (for now)
 There is [a bug](https://github.com/SpongePowered/SpongeVanilla/issues/340) in the way Sponge handles player experience data which may cause experience to be completely inacurrate or change unpredictably
