@@ -1,5 +1,5 @@
 # XPBottler
-Store your experience in bottles!
+Store your experience in bottles!  
 *Still in development/testing*
 
 # WARNING: avoid using this plugin (for now)
